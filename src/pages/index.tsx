@@ -1,6 +1,22 @@
+import {
+  Button,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
+import { useState } from "react";
 
 import { api } from "~/utils/api";
 
@@ -47,6 +63,7 @@ export default function Home() {
             <p className="text-2xl text-white">
               {hello.data ? hello.data.greeting : "Loading tRPC query..."}
             </p>
+            <SignedInUserPanel />
             <AuthShowcase />
           </div>
         </div>
@@ -55,12 +72,104 @@ export default function Home() {
   );
 }
 
+function SignedInUserPanel() {
+  const [redirectName, setRedirectName] = useState<string>("");
+  const [destinationUrl, setDestinationUrl] = useState<string>("");
+  const [isDeepRedirect, setIsDeepRedirect] = useState<boolean>(false);
+
+  const { data: sessionData } = useSession();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  // const { data: secretMessage } = api.post.getSecretMessage.useQuery(
+  //   undefined, // no input
+  //   { enabled: sessionData?.user !== undefined },
+  // );
+
+  const handleSaveClick = () => {
+    // storing routine
+
+    onClose();
+  };
+
+  if (!sessionData) return null;
+  return (
+    <>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create new QR-Code</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {/* name String */}
+            {/* destinationUrl String */}
+            {/* isDeep Boolean */}
+
+            <FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input
+                type="text"
+                onChange={(event) => setRedirectName(event.currentTarget.value)}
+              />
+              <FormHelperText>
+                Give it a descriptive name so you remember - thank me later.
+              </FormHelperText>
+
+              <FormLabel>Destination</FormLabel>
+              <Input
+                type="url"
+                onChange={(event) =>
+                  setDestinationUrl(event.currentTarget.value)
+                }
+              />
+              <FormHelperText>
+                The place (url) where the qr-code should send the person
+                scanning your qr code.
+              </FormHelperText>
+
+              <FormLabel>Full Scan</FormLabel>
+              <Input
+                type="checkbox"
+                onChange={(event) =>
+                  setIsDeepRedirect(convertToBoolean(event.currentTarget.value))
+                }
+              />
+              <FormHelperText>
+                Let us run some javascript on pefore we redirect, so you can get
+                more information about the user's devices.
+              </FormHelperText>
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleSaveClick}>
+              Save!
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <button
+        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+        onClick={onOpen}
+      >
+        Create new QR!
+      </button>
+    </>
+  );
+}
+
+function convertToBoolean(input: string): boolean {
+  try {
+    return JSON.parse(input.toLowerCase()) as boolean;
+  } catch (e) {
+    return false;
+  }
+}
 function AuthShowcase() {
   const { data: sessionData } = useSession();
 
   const { data: secretMessage } = api.post.getSecretMessage.useQuery(
     undefined, // no input
-    { enabled: sessionData?.user !== undefined }
+    { enabled: sessionData?.user !== undefined },
   );
 
   return (

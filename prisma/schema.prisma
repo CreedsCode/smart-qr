@@ -6,12 +6,21 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+    provider     = "mysql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
+}
+
+model Redirect {
+    id             String  @id @default(cuid())
+    name           String
+    destinationUrl String
+    isDeep         Boolean
+
+    createdBy User?   @relation(fields: [userId], references: [id])
+    userId    String?
+
+    @@index([id])
 }
 
 model Post {
@@ -54,14 +63,15 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String     @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?    @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    redirects     Redirect[]
 }
 
 model VerificationToken {
